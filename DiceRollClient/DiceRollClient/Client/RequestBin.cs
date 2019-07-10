@@ -1,42 +1,43 @@
-﻿using DiceRollClient.Utilities;
-using System;
-using System.Linq;
+﻿using System;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace DiceRollClient.Client
 {
-    public class DiceRoll
+    public class RequestBin
     {
         private readonly HttpClient _client;
 
-        public DiceRoll(HttpClient client, TimeSpan timeout)
+        public RequestBin(HttpClient client, TimeSpan timeout)
         {
             _client = client;
             _client.Timeout = timeout;
         }
 
-        public async Task<int []> GetDiceRolled()
+        public async Task<bool> Post(string json)
         {
             try
             {
-                var result = await _client.GetStringAsync(" https://www.random.org/dice/?num=10");
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                return Parser.ParseDiceResult(result).ToArray();
+                var result = await _client.PostAsync("https://requestb.in/", content);
+
+                return true;
             }
 
             catch (OperationCanceledException)
             {
                 // timed out
 
-                return null;
+                return false;
             }
 
             catch (HttpRequestException)
             {
                 // request failed, log here
 
-                return null;
+                return false;
             }
         }
     }
